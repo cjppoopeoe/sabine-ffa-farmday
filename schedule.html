@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sabine FFA Field Day — Schedules</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:#06080f; --surface:#0c1220; --surface2:#101828;
+    --border:#1a2640; --border2:#243350;
+    --text:#dce6ff; --muted:#4a6080; --dim:#1e3050;
+    --gold:#f5a623; --green:#22c55e; --blue:#4d9fff;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+  nav{position:sticky;top:0;z-index:200;background:#06080fe8;backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:56px;}
+  .nav-brand{display:flex;align-items:center;gap:.65rem;}
+  .nav-star{color:var(--gold);font-size:1.2rem;}
+  .nav-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1rem;letter-spacing:.08em;line-height:1;}
+  .nav-sub{font-size:.55rem;color:var(--muted);letter-spacing:.14em;}
+  .nav-links a{font-size:.72rem;font-weight:600;letter-spacing:.06em;color:var(--muted);text-decoration:none;padding:.35rem .75rem;border-radius:6px;border:1px solid transparent;transition:all .2s;margin-left:.4rem;}
+  .nav-links a:hover{color:var(--text);border-color:var(--border);}
+  .nav-links a.active{color:var(--blue);border-color:#4d9fff44;background:#4d9fff11;}
+
+  .page-header{padding:1.5rem 1.5rem .5rem;max-width:980px;margin:0 auto;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:800;letter-spacing:.06em;}
+  .page-note{color:var(--muted);font-size:.82rem;margin-top:.3rem;}
+
+  .search-wrap{padding:.75rem 1.5rem;max-width:980px;margin:0 auto;}
+  .search-inner{position:relative;max-width:380px;}
+  .search-inner svg{position:absolute;left:.7rem;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
+  .search-input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:.5rem .75rem .5rem 2.1rem;font-size:.82rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
+  .search-input:focus{border-color:var(--blue);}
+
+  main{padding:0 1.5rem 3rem;max-width:980px;margin:0 auto;}
+
+  /* Grade block */
+  .grade-block{margin-bottom:2rem;}
+  .grade-heading{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;padding-bottom:.6rem;border-bottom:1px solid var(--border);}
+  .grade-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .grade-heading-text{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:800;letter-spacing:.06em;}
+
+  /* Class card */
+  .class-card{background:var(--surface2);border:1px solid var(--border);border-radius:.75rem;overflow:hidden;margin-bottom:.75rem;border-left-width:3px;}
+  .class-card-header{padding:.9rem 1.1rem;display:flex;justify-content:space-between;align-items:center;}
+  .class-card-teacher{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:.04em;}
+  .class-card-room{color:var(--muted);font-size:.82rem;font-weight:400;margin-left:.4rem;}
+  .student-count{font-size:.72rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:2px 10px;}
+
+  /* Schedule table */
+  .sched-table-wrap{border-top:1px solid var(--border);overflow:hidden;}
+  .no-sched{padding:.9rem 1.1rem;font-size:.82rem;color:var(--dim);font-style:italic;}
+  table{width:100%;border-collapse:collapse;}
+  thead tr{background:#ffffff06;}
+  thead th{padding:.55rem 1rem;text-align:left;font-size:.65rem;font-weight:700;letter-spacing:.12em;color:var(--muted);border-bottom:1px solid var(--border);}
+  tbody tr{border-bottom:1px solid var(--border);}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:nth-child(even){background:#ffffff03;}
+  tbody td{padding:.55rem 1rem;font-size:.82rem;}
+  .td-time{color:var(--blue);font-weight:600;white-space:nowrap;width:90px;}
+  .td-location{color:var(--muted);white-space:nowrap;width:130px;}
+
+  /* Roster accordion */
+  .roster-toggle{width:100%;background:none;border:none;border-top:1px solid var(--border);color:var(--muted);cursor:pointer;padding:.6rem 1.1rem;text-align:left;font-size:.75rem;font-family:'DM Sans',sans-serif;font-weight:600;letter-spacing:.06em;display:flex;align-items:center;gap:.5rem;transition:color .2s;}
+  .roster-toggle:hover{color:var(--text);}
+  .roster-body{border-top:1px solid var(--border);padding:.75rem 1.1rem;display:none;}
+  .roster-body.open{display:block;}
+  .roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.3rem;}
+  .roster-name{font-size:.8rem;color:#8a9ab8;padding:.25rem .5rem;background:var(--surface);border-radius:4px;border:1px solid var(--border);}
+  .roster-name.in{color:#86efac;border-color:#1a4d28;background:#071810;}
+
+  .empty{text-align:center;color:var(--dim);padding:3rem 0;font-size:.9rem;}
+  .loading{display:flex;align-items:center;justify-content:center;height:50vh;flex-direction:column;gap:1rem;}
+  .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-brand">
+    <span class="nav-star">★</span>
+    <div>
+      <div class="nav-title">SABINE FFA</div>
+      <div class="nav-sub">ELEMENTARY FIELD DAY</div>
+    </div>
+  </div>
+  <div class="nav-links">
+    <a href="index.html">✓ Check-In</a>
+    <a href="welcome.html">◉ Welcome Board</a>
+    <a href="schedule.html" class="active">≡ Schedules</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-title">CLASS SCHEDULES</div>
+  <div class="page-note">All schedules are live — changes made in Check-In update here instantly.</div>
+</div>
+
+<div class="search-wrap">
+  <div class="search-inner">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input class="search-input" id="searchInput" placeholder="Search teacher, room, grade…" oninput="renderAll()"/>
+  </div>
+</div>
+
+<main id="mainContent">
+  <div class="loading"><div class="spinner"></div><div style="color:var(--muted);font-size:.85rem">Loading schedules…</div></div>
+</main>
+
+<script src="firebase-config.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const app = initializeApp(FIREBASE_CONFIG);
+const db  = getDatabase(app);
+
+const GRADE_COLORS = { k:"#f5a623","1":"#22c55e","2":"#4d9fff","3":"#a855f7","4":"#ef4444","5":"#06b6d4" };
+const GRADE_LABELS = { k:"Kindergarten","1":"1st Grade","2":"2nd Grade","3":"3rd Grade","4":"4th Grade","5":"5th Grade" };
+const GRADE_ORDER  = ["k","1","2","3","4","5"];
+
+let grades={}, checkins={};
+let openRosters = new Set();
+
+function checkinKey(cid,name){return`${cid}_${name.replace(/[^a-z0-9]/gi,"_")}`;}
+
+onValue(ref(db,"grades"),   snap=>{ grades=snap.val()||{};   renderAll(); });
+onValue(ref(db,"checkins"), snap=>{ checkins=snap.val()||{}; renderAll(); });
+
+window.renderAll = function() {
+  const q = (document.getElementById("searchInput")?.value||"").toLowerCase().trim();
+  const main = document.getElementById("mainContent");
+  main.innerHTML = "";
+
+  GRADE_ORDER.forEach(gid=>{
+    const g=grades[gid]; if(!g) return;
+    const filtered = Object.entries(g.classes||{}).filter(([cid,cls])=>{
+      if(!q) return true;
+      const label=GRADE_LABELS[gid]||"";
+      return label.toLowerCase().includes(q)||cls.teacher?.toLowerCase().includes(q)||cls.room?.toLowerCase().includes(q);
+    });
+    if(filtered.length===0) return;
+
+    const color=GRADE_COLORS[gid]||"#888";
+    const block=document.createElement("div");
+    block.className="grade-block";
+    block.innerHTML=`
+      <div class="grade-heading">
+        <div class="grade-dot" style="background:${color}"></div>
+        <div class="grade-heading-text" style="color:${color}">${GRADE_LABELS[gid]}</div>
+      </div>
+    `;
+    main.appendChild(block);
+
+    filtered.forEach(([cid,cls])=>{
+      const names=Object.values(cls.students||{});
+      let inCount=0; names.forEach(n=>{if(checkins[checkinKey(cid,n)])inCount++;});
+      const isRosterOpen=openRosters.has(cid);
+      const hasSched=cls.schedule&&cls.schedule.length>0;
+
+      const card=document.createElement("div");
+      card.className="class-card";
+      card.style.borderLeftColor=color;
+
+      let schedHTML="";
+      if(hasSched){
+        schedHTML=`
+          <div class="sched-table-wrap">
+            <table>
+              <thead><tr>
+                <th>TIME</th><th>ACTIVITY / STATION</th><th>LOCATION</th>
+              </tr></thead>
+              <tbody>
+                ${cls.schedule.map(r=>`
+                  <tr>
+                    <td class="td-time">${r.time||""}</td>
+                    <td>${r.activity||""}</td>
+                    <td class="td-location">${r.location||""}</td>
+                  </tr>`).join("")}
+              </tbody>
+            </table>
+          </div>`;
+      } else {
+        schedHTML=`<div class="no-sched">No schedule added yet — set it up in the Check-In page.</div>`;
+      }
+
+      card.innerHTML=`
+        <div class="class-card-header">
+          <div>
+            <span class="class-card-teacher">${cls.teacher}</span>
+            <span class="class-card-room">Room ${cls.room}</span>
+          </div>
+          <div class="student-count">${names.length} students &bull; ${inCount} in</div>
+        </div>
+        ${schedHTML}
+        <button class="roster-toggle" onclick="toggleRoster('${cid}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s;transform:${isRosterOpen?"rotate(0)":"rotate(-90deg)"}"><polyline points="6 9 12 15 18 9"/></svg>
+          ${isRosterOpen?"Hide":"Show"} Roster (${names.length})
+        </button>
+        <div class="roster-body ${isRosterOpen?"open":""}" id="roster-${cid}">
+          <div class="roster-grid">
+            ${names.map(n=>`<div class="roster-name ${checkins[checkinKey(cid,n)]?"in":""}">${n}</div>`).join("")}
+          </div>
+        </div>
+      `;
+      block.appendChild(card);
+    });
+  });
+
+  if(main.innerHTML==="") {
+    main.innerHTML=`<div class="empty">No results for "${q}"</div>`;
+  }
+};
+
+window.toggleRoster = cid => {
+  openRosters.has(cid)?openRosters.delete(cid):openRosters.add(cid);
+  renderAll();
+};
+</script>
+</body>
+</html>

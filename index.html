@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sabine FFA Field Day — Check-In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:       #06080f;
+    --surface:  #0c1220;
+    --surface2: #101828;
+    --border:   #1a2640;
+    --border2:  #243350;
+    --text:     #dce6ff;
+    --muted:    #4a6080;
+    --dim:      #1e3050;
+    --gold:     #f5a623;
+    --green:    #22c55e;
+    --blue:     #4d9fff;
+    --red:      #ef4444;
+    --purple:   #a855f7;
+    --cyan:     #06b6d4;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 200;
+    background: #06080fe8;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 1.5rem; height: 56px;
+  }
+  .nav-brand { display: flex; align-items: center; gap: .65rem; }
+  .nav-star { color: var(--gold); font-size: 1.2rem; }
+  .nav-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 1rem; letter-spacing: .08em; line-height: 1; }
+  .nav-sub { font-size: .55rem; color: var(--muted); letter-spacing: .14em; }
+  .nav-links { display: flex; gap: .5rem; }
+  .nav-links a {
+    font-size: .72rem; font-weight: 600; letter-spacing: .06em;
+    color: var(--muted); text-decoration: none; padding: .35rem .75rem;
+    border-radius: 6px; border: 1px solid transparent; transition: all .2s;
+  }
+  .nav-links a:hover { color: var(--text); border-color: var(--border); }
+  .nav-links a.active { color: var(--blue); border-color: #4d9fff44; background: #4d9fff11; }
+  .sync-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 6px var(--green);
+    display: inline-block; margin-right: .4rem;
+  }
+  .sync-dot.offline { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    background: #090d1a; border-bottom: 1px solid var(--border);
+    padding: .6rem 1.5rem; display: flex; gap: 2rem; align-items: center;
+  }
+  .stat { display: flex; align-items: baseline; gap: .35rem; }
+  .stat-val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 700; line-height: 1; }
+  .stat-label { font-size: .58rem; color: var(--dim); letter-spacing: .1em; }
+  .overall-bar { flex: 1; max-width: 160px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .overall-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--blue)); border-radius: 2px; transition: width .5s; }
+
+  /* ── SEARCH ── */
+  .search-wrap { padding: .9rem 1.5rem; }
+  .search-inner { position: relative; max-width: 400px; }
+  .search-inner svg { position: absolute; left: .7rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  .search-input {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: .55rem .75rem .55rem 2.2rem;
+    font-size: .82rem; font-family: 'DM Sans', sans-serif; outline: none;
+    transition: border-color .2s;
+  }
+  .search-input:focus { border-color: var(--blue); }
+
+  /* ── MAIN ── */
+  main { padding: 0 1.5rem 3rem; max-width: 980px; margin: 0 auto; }
+
+  /* ── GRADE SECTION ── */
+  .grade-header {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface); border-radius: .8rem;
+    padding: .85rem 1.1rem; cursor: pointer; margin-bottom: .5rem;
+    border: 1px solid transparent; position: relative; overflow: hidden;
+    transition: border-color .2s;
+  }
+  .grade-header:hover { border-color: var(--border2); }
+  .grade-accent { position: absolute; inset: 0; opacity: .07; pointer-events: none; }
+  .grade-left { display: flex; align-items: center; gap: .75rem; position: relative; }
+  .grade-badge {
+    width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: .9rem;
+  }
+  .grade-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1.15rem; font-weight: 700; letter-spacing: .04em; }
+  .grade-meta { font-size: .68rem; color: var(--muted); margin-top: 2px; }
+  .grade-right { display: flex; align-items: center; gap: .6rem; position: relative; }
+  .pct-badge { border-radius: 5px; padding: 2px 9px; font-family: 'Barlow Condensed', sans-serif; font-size: .72rem; font-weight: 700; }
+  .chevron { color: var(--muted); transition: transform .2s; }
+  .chevron.open { transform: rotate(0deg); }
+  .chevron.closed { transform: rotate(-90deg); }
+  .mini-bar { height: 3px; width: 80px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .mini-fill { height: 100%; border-radius: 2px; transition: width .4s; }
+  .grade-section { margin-bottom: 1.25rem; }
+  .grade-body { padding-left: .5rem; }
+
+  /* ── CLASS PANEL ── */
+  .class-panel {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: .7rem; margin-bottom: .6rem; overflow: hidden;
+    border-left-width: 3px;
+  }
+  .class-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .8rem 1rem; cursor: pointer; transition: background .15s;
+  }
+  .class-header:hover { background: #ffffff06; }
+  .class-left { display: flex; align-items: center; gap: .65rem; }
+  .class-teacher { font-family: 'Barlow Condensed', sans-serif; font-size: .98rem; font-weight: 600; letter-spacing: .03em; }
+  .class-room { color: var(--muted); font-weight: 400; font-size: .82rem; margin-left: .4rem; }
+  .class-actions { display: flex; align-items: center; gap: .4rem; }
+  .btn {
+    border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 4px;
+    font-size: .68rem; font-weight: 600; letter-spacing: .04em; padding: 3px 8px;
+    border: 1px solid; transition: all .15s; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-sched { background: transparent; border-color: var(--border); color: var(--muted); }
+  .btn-sched.has-sched { background: #08200f; border-color: #1a5c30; color: var(--green); }
+  .btn-print { background: transparent; border-color: var(--border); color: var(--muted); }
+  .btn-checkall { background: #0a1f3a; border-color: #102a50; color: var(--blue); }
+  .btn-checkall.all-in { background: #08200f; border-color: #1a5c30; color: var(--green); }
+  .btn:hover { filter: brightness(1.2); }
+
+  /* ── STUDENT LIST ── */
+  .class-body { border-top: 1px solid var(--border); padding: .65rem .9rem; }
+  .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .35rem; margin-bottom: .6rem; }
+  .student-row {
+    display: flex; align-items: center; justify-content: space-between;
+    border-radius: 5px; padding: .4rem .6rem; transition: all .15s;
+    border: 1px solid;
+  }
+  .student-row.out { background: #091525; border-color: var(--border); }
+  .student-row.in  { background: #071810; border-color: #1a4d28; }
+  .student-left { display: flex; align-items: center; gap: .45rem; }
+  .check-box {
+    width: 19px; height: 19px; border-radius: 4px; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid; transition: all .15s; background: transparent; padding: 0;
+  }
+  .student-name { font-size: .8rem; transition: color .15s; }
+  .student-name.in { color: #86efac; font-weight: 600; }
+  .student-name.out { color: #6a7f9e; }
+  .remove-btn { background: none; border: none; color: var(--dim); cursor: pointer; display: flex; padding: 1px; opacity: .7; }
+  .add-student-row { display: flex; gap: .4rem; margin-top: .25rem; }
+  .add-input {
+    flex: 1; background: #070e1c; border: 1px dashed var(--border);
+    color: var(--text); border-radius: 5px; padding: .4rem .65rem;
+    font-size: .76rem; font-family: 'DM Sans', sans-serif; outline: none;
+  }
+  .add-input:focus { border-color: var(--blue); border-style: solid; }
+  .btn-add { background: #4d9fff22; border-color: #4d9fff55; color: var(--blue); }
+
+  /* ── ADD CLASS ── */
+  .add-class-bar { display: flex; gap: .4rem; margin-top: .1rem; }
+  .add-class-bar input {
+    background: var(--surface2); border: 1px dashed var(--border);
+    color: var(--text); border-radius: 5px; padding: .45rem .65rem;
+    font-size: .8rem; font-family: 'DM Sans', sans-serif; outline: none;
+  }
+  .add-class-bar input:focus { border-color: var(--blue); border-style: solid; }
+  .btn-ghost {
+    background: none; border: 1px dashed var(--border); color: var(--dim);
+    border-radius: .65rem; padding: .55rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: .75rem; width: 100%; margin-top: .1rem;
+    font-family: 'DM Sans', sans-serif; transition: border-color .2s, color .2s;
+  }
+  .btn-ghost:hover { border-color: var(--border2); color: var(--muted); }
+
+  /* ── MODAL ── */
+  .modal-bg {
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(4,6,14,.9); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center; padding: 1rem;
+  }
+  .modal {
+    background: #0f1828; border: 1px solid var(--border2);
+    border-radius: 1rem; padding: 2rem; width: 100%; max-width: 640px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 30px 80px #000b;
+  }
+  .modal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; font-weight: 700; letter-spacing: .07em; color: var(--text); }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+  .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; display: flex; }
+  .sched-grid-head { display: grid; grid-template-columns: 90px 1fr 110px 24px; gap: .4rem; margin-bottom: .3rem; }
+  .sched-grid-row  { display: grid; grid-template-columns: 90px 1fr 110px 24px; gap: .4rem; align-items: center; margin-bottom: .3rem; }
+  .sched-head { font-size: .62rem; font-weight: 700; letter-spacing: .1em; color: var(--dim); }
+  .sched-input {
+    background: #08111e; border: 1px solid var(--border); color: var(--text);
+    border-radius: 5px; padding: .42rem .6rem; font-size: .78rem;
+    font-family: 'DM Sans', sans-serif; outline: none; width: 100%;
+  }
+  .sched-input:focus { border-color: var(--blue); }
+  .modal-note { font-size: .8rem; color: var(--muted); margin: 0 0 1rem; }
+  .modal-actions { display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1.25rem; }
+  .btn-cancel { padding: .5rem 1.2rem; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; cursor: pointer; font-size: .82rem; font-family: 'DM Sans', sans-serif; }
+  .btn-save { padding: .5rem 1.4rem; background: var(--green); border: none; color: #000; border-radius: 6px; cursor: pointer; font-size: .82rem; font-weight: 700; font-family: 'DM Sans', sans-serif; }
+  .btn-add-row { background: none; border: 1px dashed var(--border); color: var(--muted); border-radius: 6px; padding: .38rem .85rem; cursor: pointer; font-size: .74rem; display: flex; align-items: center; gap: 5px; margin-bottom: 1.25rem; font-family: 'DM Sans', sans-serif; }
+
+  /* ── PRINT ── */
+  @media print {
+    body > *:not(#print-root) { display: none !important; }
+    #print-root { display: block !important; font-family: Georgia, serif; color: #000; padding: 1.5rem; }
+  }
+  #print-root { display: none; }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align: center; color: var(--dim); padding: 3rem 0; font-size: .9rem; }
+
+  /* ── LOADING ── */
+  .loading { display: flex; align-items: center; justify-content: center; height: 60vh; flex-direction: column; gap: 1rem; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- Print target -->
+<div id="print-root"></div>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-brand">
+    <span class="nav-star">★</span>
+    <div>
+      <div class="nav-title">SABINE FFA</div>
+      <div class="nav-sub">ELEMENTARY FIELD DAY</div>
+    </div>
+  </div>
+  <div class="nav-links">
+    <a href="index.html" class="active">✓ Check-In</a>
+    <a href="welcome.html">◉ Welcome Board</a>
+    <a href="schedule.html">≡ Schedules</a>
+  </div>
+  <div style="font-size:.72rem;color:var(--muted);display:flex;align-items:center;">
+    <span class="sync-dot" id="syncDot"></span>
+    <span id="syncStatus">Connecting...</span>
+  </div>
+</nav>
+
+<!-- Stats bar -->
+<div class="stats-bar">
+  <div class="stat"><span class="stat-val" id="statIn" style="color:var(--green)">0</span><span class="stat-label">/ <span id="statTotal">0</span> IN</span></div>
+  <div class="stat"><span class="stat-val" id="statGrades" style="color:var(--blue)">0</span><span class="stat-label">GRADES</span></div>
+  <div class="stat"><span class="stat-val" id="statClasses" style="color:var(--purple)">0</span><span class="stat-label">CLASSES</span></div>
+  <div class="stat"><span class="stat-val" id="statPct" style="color:var(--gold)">0%</span><span class="stat-label">COMPLETE</span></div>
+  <div class="overall-bar"><div class="overall-fill" id="overallFill" style="width:0%"></div></div>
+</div>
+
+<!-- Search -->
+<div class="search-wrap">
+  <div class="search-inner">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input class="search-input" id="searchInput" placeholder="Search teacher, student, room, grade…" oninput="renderAll()"/>
+  </div>
+</div>
+
+<!-- Main content -->
+<main id="mainContent">
+  <div class="loading"><div class="spinner"></div><div style="color:var(--muted);font-size:.85rem">Connecting to database…</div></div>
+</main>
+
+<!-- Schedule Modal -->
+<div class="modal-bg" id="schedModal" style="display:none" onclick="if(event.target===this)closeSchedModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="schedModalTitle">CLASS SCHEDULE</span>
+      <button class="modal-close" onclick="closeSchedModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <p class="modal-note">Build the schedule for this class's field day. You can always come back and edit it.</p>
+    <div class="sched-grid-head">
+      <span class="sched-head">TIME</span><span class="sched-head">ACTIVITY / STATION</span><span class="sched-head">LOCATION</span><span></span>
+    </div>
+    <div id="schedRows"></div>
+    <button class="btn-add-row" onclick="addSchedRow()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Row
+    </button>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSchedModal()">Cancel</button>
+      <button class="btn-save" onclick="saveSchedule()">Save Schedule</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="firebase-config.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// ── Init ──────────────────────────────────────────────────────
+const app = initializeApp(FIREBASE_CONFIG);
+const db  = getDatabase(app);
+
+// ── Grade colors ──────────────────────────────────────────────
+const GRADE_COLORS = { k:"#f5a623", "1":"#22c55e", "2":"#4d9fff", "3":"#a855f7", "4":"#ef4444", "5":"#06b6d4" };
+const GRADE_LABELS = { k:"Kindergarten", "1":"1st Grade", "2":"2nd Grade", "3":"3rd Grade", "4":"4th Grade", "5":"5th Grade" };
+const GRADE_ORDER  = ["k","1","2","3","4","5"];
+
+// ── Seed data (only written once if DB is empty) ───────────────
+const SEED = {
+  grades: {
+    k: { label:"Kindergarten", classes: {
+      "k-1":{ teacher:"Mrs. Johnson", room:"K-1", schedule:null,
+        students:{ s0:"Adams, Lily", s1:"Baker, Noah", s2:"Carter, Emma", s3:"Davis, Liam", s4:"Evans, Ava" } },
+      "k-2":{ teacher:"Mrs. Thompson", room:"K-2", schedule:null,
+        students:{ s0:"Fisher, Oliver", s1:"Green, Sophia", s2:"Harris, Elijah", s3:"Jones, Isabella" } },
+    }},
+    "1": { label:"1st Grade", classes: {
+      "1-1":{ teacher:"Mr. Williams", room:"1-A", schedule:null,
+        students:{ s0:"King, Mason", s1:"Lewis, Charlotte", s2:"Miller, Aiden", s3:"Moore, Mia", s4:"Nelson, Lucas" } },
+      "1-2":{ teacher:"Ms. Clark", room:"1-B", schedule:null,
+        students:{ s0:"Parker, Harper", s1:"Quinn, Ethan", s2:"Reed, Amelia" } },
+    }},
+    "2": { label:"2nd Grade", classes: {
+      "2-1":{ teacher:"Mrs. Robinson", room:"2-A", schedule:null,
+        students:{ s0:"Scott, James", s1:"Taylor, Evelyn", s2:"Turner, Benjamin", s3:"Walker, Luna", s4:"White, Henry" } },
+      "2-2":{ teacher:"Mr. Hall", room:"2-B", schedule:null,
+        students:{ s0:"Young, Ella", s1:"Allen, Owen", s2:"Baker, Scarlett" } },
+    }},
+    "3": { label:"3rd Grade", classes: {
+      "3-1":{ teacher:"Ms. Martinez", room:"3-A", schedule:null,
+        students:{ s0:"Campbell, Logan", s1:"Cooper, Chloe", s2:"Edwards, Jackson", s3:"Evans, Layla" } },
+    }},
+    "4": { label:"4th Grade", classes: {
+      "4-1":{ teacher:"Mrs. Garcia", room:"4-A", schedule:null,
+        students:{ s0:"Foster, Sebastian", s1:"Gray, Penelope", s2:"Hayes, Mateo", s3:"Hill, Riley" } },
+    }},
+    "5": { label:"5th Grade", classes: {
+      "5-1":{ teacher:"Mr. Anderson", room:"5-A", schedule:null,
+        students:{ s0:"Jackson, Zoey", s1:"James, Jack", s2:"Jenkins, Nora", s3:"Johnson, Wyatt", s4:"Jones, Stella" } },
+    }},
+  },
+  checkins: {}
+};
+
+// ── State ──────────────────────────────────────────────────────
+let state = { grades:{}, checkins:{} };
+let openGrades   = new Set(["k","1","2","3","4","5"]);
+let openClasses  = new Set();
+let addingClass  = new Set();
+let schedTarget  = null;
+let schedRows    = [];
+
+// ── Firebase listeners ────────────────────────────────────────
+const gradesRef   = ref(db, "grades");
+const checkinsRef = ref(db, "checkins");
+
+onValue(gradesRef, snap => {
+  if (!snap.exists()) {
+    set(ref(db,"grades"), SEED.grades);
+    set(ref(db,"checkins"), {});
+  } else {
+    state.grades = snap.val() || {};
+    renderAll();
+  }
+  setSyncStatus(true);
+}, err => setSyncStatus(false));
+
+onValue(checkinsRef, snap => {
+  state.checkins = snap.val() || {};
+  renderAll();
+});
+
+function setSyncStatus(ok) {
+  document.getElementById("syncDot").className    = "sync-dot" + (ok ? "" : " offline");
+  document.getElementById("syncStatus").textContent = ok ? "Live" : "Offline";
+}
+
+// ── DB helpers ────────────────────────────────────────────────
+function toggleCheckin(key, val) {
+  set(ref(db, `checkins/${key.replace(/\//g,"_")}`), val || null);
+}
+function checkAllStudents(clsId, students, val) {
+  const u = {};
+  Object.values(students||{}).forEach(name => {
+    u[`${clsId}_${slugify(name)}`] = val || null;
+  });
+  update(ref(db,"checkins"), u);
+}
+function saveStudents(gradeId, clsId, students) {
+  set(ref(db,`grades/${gradeId}/classes/${clsId}/students`), students);
+}
+function saveSchedToDB(gradeId, clsId, rows) {
+  set(ref(db,`grades/${gradeId}/classes/${clsId}/schedule`), rows.length ? rows : null);
+}
+function addClassToDB(gradeId, teacher, room) {
+  const id = gradeId+"-"+Date.now();
+  set(ref(db,`grades/${gradeId}/classes/${id}`), { teacher, room, schedule:null, students:{} });
+}
+function slugify(s) { return s.replace(/[^a-z0-9]/gi,"_"); }
+function checkinKey(clsId, name) { return `${clsId}_${slugify(name)}`; }
+
+// ── Stats ──────────────────────────────────────────────────────
+function calcStats() {
+  let total=0, inCount=0, grades=0, classes=0;
+  (GRADE_ORDER).forEach(gid => {
+    const g = state.grades[gid]; if(!g) return;
+    grades++;
+    Object.entries(g.classes||{}).forEach(([cid,cls])=>{
+      classes++;
+      Object.values(cls.students||{}).forEach(name=>{
+        total++;
+        if(state.checkins[checkinKey(cid,name)]) inCount++;
+      });
+    });
+  });
+  return {total,inCount,grades,classes};
+}
+
+function updateStats() {
+  const {total,inCount,grades,classes} = calcStats();
+  const pct = total>0?Math.round(inCount/total*100):0;
+  document.getElementById("statIn").textContent     = inCount;
+  document.getElementById("statTotal").textContent  = total;
+  document.getElementById("statGrades").textContent = grades;
+  document.getElementById("statClasses").textContent= classes;
+  document.getElementById("statPct").textContent    = pct+"%";
+  document.getElementById("overallFill").style.width= pct+"%";
+}
+
+// ── Render ────────────────────────────────────────────────────
+window.renderAll = function() {
+  updateStats();
+  const q = (document.getElementById("searchInput")?.value||"").toLowerCase().trim();
+  const main = document.getElementById("mainContent");
+  main.innerHTML = "";
+
+  GRADE_ORDER.forEach(gid => {
+    const g = state.grades[gid]; if(!g) return;
+    const classes = g.classes||{};
+
+    // Filter
+    const filteredClasses = Object.entries(classes).filter(([cid,cls])=>{
+      if(!q) return true;
+      const label = GRADE_LABELS[gid]||"";
+      if(label.toLowerCase().includes(q)) return true;
+      if(cls.teacher?.toLowerCase().includes(q)) return true;
+      if(cls.room?.toLowerCase().includes(q)) return true;
+      if(Object.values(cls.students||{}).some(s=>s.toLowerCase().includes(q))) return true;
+      return false;
+    });
+    if(filteredClasses.length===0) return;
+
+    // Grade totals
+    let gTotal=0, gIn=0;
+    filteredClasses.forEach(([cid,cls])=>{
+      Object.values(cls.students||{}).forEach(name=>{gTotal++;if(state.checkins[checkinKey(cid,name)])gIn++;});
+    });
+    const gPct = gTotal>0?Math.round(gIn/gTotal*100):0;
+    const color = GRADE_COLORS[gid]||"#888";
+    const abbr  = gid==="k"?"K":gid;
+    const isOpen = openGrades.has(gid);
+
+    const section = document.createElement("div");
+    section.className = "grade-section";
+    section.innerHTML = `
+      <div class="grade-header" onclick="toggleGrade('${gid}')">
+        <div class="grade-accent" style="background:linear-gradient(135deg,${color},transparent)"></div>
+        <div class="grade-left">
+          <div class="grade-badge" style="background:${color}1a;border:1px solid ${color}44;color:${color}">${abbr}</div>
+          <div>
+            <div class="grade-name">${GRADE_LABELS[gid]||g.label}</div>
+            <div class="grade-meta">
+              <div class="mini-bar" style="display:inline-block;vertical-align:middle;margin-right:6px">
+                <div class="mini-fill" style="width:${gPct}%;background:${color}"></div>
+              </div>
+              ${gIn}/${gTotal} in &bull; ${filteredClasses.length} class${filteredClasses.length!==1?"es":""}
+            </div>
+          </div>
+        </div>
+        <div class="grade-right">
+          <div class="pct-badge" style="background:${color}1a;border:1px solid ${color}44;color:${color}">${gPct}%</div>
+          <div class="chevron ${isOpen?"open":"closed"}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="grade-body" id="gradebody-${gid}" style="display:${isOpen?"block":"none"}"></div>
+    `;
+    main.appendChild(section);
+
+    const body = document.getElementById(`gradebody-${gid}`);
+
+    filteredClasses.forEach(([cid,cls])=>{
+      const students = cls.students||{};
+      const names    = Object.values(students);
+      let cIn=0;
+      names.forEach(n=>{ if(state.checkins[checkinKey(cid,n)]) cIn++; });
+      const cPct  = names.length>0?Math.round(cIn/names.length*100):0;
+      const allIn = names.length>0&&names.every(n=>state.checkins[checkinKey(cid,n)]);
+      const isOpen= openClasses.has(cid);
+      const hasSched = cls.schedule&&cls.schedule.length>0;
+
+      const panel = document.createElement("div");
+      panel.className="class-panel";
+      panel.style.borderLeftColor = color;
+
+      panel.innerHTML = `
+        <div class="class-header" onclick="toggleClass('${cid}')">
+          <div class="class-left">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);transition:transform .2s;transform:${isOpen?"rotate(0)":"rotate(-90deg)"}"><polyline points="6 9 12 15 18 9"/></svg>
+            <div>
+              <span class="class-teacher">${cls.teacher}<span class="class-room">Room ${cls.room}</span></span>
+              <div style="margin-top:3px;display:flex;align-items:center;gap:6px">
+                <div style="height:3px;width:64px;background:var(--border);border-radius:2px;overflow:hidden">
+                  <div style="height:100%;width:${cPct}%;background:${color};transition:width .4s"></div>
+                </div>
+                <span style="font-size:.68rem;color:var(--muted)">${cIn}/${names.length}</span>
+              </div>
+            </div>
+          </div>
+          <div class="class-actions" onclick="event.stopPropagation()">
+            <button class="btn btn-sched ${hasSched?"has-sched":""}" onclick="openSchedModal('${gid}','${cid}')">
+              📅 ${hasSched?"Sched ✓":"Schedule"}
+            </button>
+            <button class="btn btn-print" onclick="doPrint('${gid}','${cid}')">🖨 Print</button>
+            <button class="btn btn-checkall ${allIn?"all-in":""}" onclick="doCheckAll('${gid}','${cid}',${!allIn})">
+              ✓ ${allIn?"Uncheck All":"Check All"}
+            </button>
+          </div>
+        </div>
+        <div class="class-body" id="classbody-${cid}" style="display:${isOpen?"block":"none"}">
+          <div class="student-grid" id="studentgrid-${cid}"></div>
+          <div class="add-student-row">
+            <input class="add-input" id="addinput-${cid}" placeholder="Add student: Last, First" onkeydown="if(event.key==='Enter')addStudent('${gid}','${cid}')"/>
+            <button class="btn btn-add" onclick="addStudent('${gid}','${cid}')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add
+            </button>
+          </div>
+        </div>
+      `;
+      body.appendChild(panel);
+
+      // Render students
+      const grid = document.getElementById(`studentgrid-${cid}`);
+      if(names.length===0) {
+        grid.innerHTML = `<div style="color:var(--dim);font-size:.8rem;grid-column:1/-1;padding:.5rem 0">No students yet.</div>`;
+      }
+      names.forEach(name=>{
+        const key = checkinKey(cid,name);
+        const isIn = !!state.checkins[key];
+        const row = document.createElement("div");
+        row.className = `student-row ${isIn?"in":"out"}`;
+        row.innerHTML = `
+          <div class="student-left">
+            <button class="check-box" style="border-color:${isIn?color:"#243555"};background:${isIn?color:"transparent"}" onclick="doToggle('${cid}','${name}',${!isIn})">
+              ${isIn?`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`:""}
+            </button>
+            <span class="student-name ${isIn?"in":"out"}">${name}</span>
+          </div>
+          <button class="remove-btn" onclick="removeStudent('${gid}','${cid}','${name.replace(/'/g,"\\'")}')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        `;
+        grid.appendChild(row);
+      });
+    });
+
+    // Add class button
+    const addClsId = `addcls-${gid}`;
+    const addingNow = addingClass.has(gid);
+    const addDiv = document.createElement("div");
+    if(addingNow) {
+      addDiv.innerHTML = `
+        <div class="add-class-bar">
+          <input id="teacher-${gid}" placeholder="Teacher name (e.g. Mrs. Smith)" style="flex:1" onkeydown="if(event.key==='Enter')doAddClass('${gid}')"/>
+          <input id="room-${gid}" placeholder="Room (K-3)" style="width:110px" onkeydown="if(event.key==='Enter')doAddClass('${gid}')"/>
+          <button class="btn btn-save" style="padding:4px 12px" onclick="doAddClass('${gid}')">Add</button>
+          <button class="btn btn-cancel" style="padding:4px 10px" onclick="cancelAddClass('${gid}')">✕</button>
+        </div>`;
+    } else {
+      addDiv.innerHTML = `<button class="btn-ghost" onclick="startAddClass('${gid}')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Class to ${GRADE_LABELS[gid]}
+      </button>`;
+    }
+    body.appendChild(addDiv);
+  });
+};
+
+// ── Interaction handlers ──────────────────────────────────────
+window.toggleGrade   = gid => { openGrades.has(gid)?openGrades.delete(gid):openGrades.add(gid); renderAll(); };
+window.toggleClass   = cid => { openClasses.has(cid)?openClasses.delete(cid):openClasses.add(cid); renderAll(); };
+window.startAddClass = gid => { addingClass.add(gid); renderAll(); setTimeout(()=>document.getElementById("teacher-"+gid)?.focus(),50); };
+window.cancelAddClass= gid => { addingClass.delete(gid); renderAll(); };
+window.doAddClass    = gid => {
+  const t = document.getElementById("teacher-"+gid)?.value.trim();
+  const r = document.getElementById("room-"+gid)?.value.trim();
+  if(!t) return;
+  addingClass.delete(gid);
+  addClassToDB(gid,t,r||"");
+};
+window.doToggle = (cid,name,val) => {
+  const key = checkinKey(cid,name);
+  set(ref(db,`checkins/${key}`), val||null);
+};
+window.doCheckAll = (gid,cid,val) => {
+  const cls = state.grades[gid]?.classes?.[cid];
+  if(!cls) return;
+  checkAllStudents(cid, cls.students, val);
+};
+window.addStudent = (gid,cid) => {
+  const el = document.getElementById(`addinput-${cid}`);
+  const name = el?.value.trim(); if(!name) return;
+  const cls = state.grades[gid]?.classes?.[cid]; if(!cls) return;
+  const existing = Object.values(cls.students||{});
+  if(existing.includes(name)) { alert("Already on roster."); return; }
+  const newStudents = {...(cls.students||{})};
+  newStudents["s"+Date.now()] = name;
+  saveStudents(gid,cid,newStudents);
+  el.value="";
+};
+window.removeStudent = (gid,cid,name) => {
+  if(!confirm(`Remove ${name}?`)) return;
+  const cls = state.grades[gid]?.classes?.[cid]; if(!cls) return;
+  const newStudents = {...(cls.students||{})};
+  const key = Object.keys(newStudents).find(k=>newStudents[k]===name);
+  if(key) delete newStudents[key];
+  saveStudents(gid,cid,newStudents);
+  remove(ref(db,`checkins/${checkinKey(cid,name)}`));
+};
+
+// ── Schedule Modal ────────────────────────────────────────────
+window.openSchedModal = (gid,cid) => {
+  schedTarget = {gid,cid};
+  const cls = state.grades[gid]?.classes?.[cid];
+  document.getElementById("schedModalTitle").textContent = `SCHEDULE — ${cls?.teacher||""} (${cls?.room||""})`;
+  schedRows = cls?.schedule ? JSON.parse(JSON.stringify(cls.schedule)) : [{time:"",activity:"",location:""}];
+  renderSchedRows();
+  document.getElementById("schedModal").style.display="flex";
+};
+window.closeSchedModal = () => { document.getElementById("schedModal").style.display="none"; schedTarget=null; };
+window.addSchedRow = () => { schedRows.push({time:"",activity:"",location:""}); renderSchedRows(); };
+function renderSchedRows() {
+  const container = document.getElementById("schedRows");
+  container.innerHTML = "";
+  schedRows.forEach((r,i)=>{
+    const row = document.createElement("div");
+    row.className="sched-grid-row";
+    row.innerHTML=`
+      <input class="sched-input" placeholder="8:00 AM" value="${r.time||""}" onchange="schedRows[${i}].time=this.value"/>
+      <input class="sched-input" placeholder="Livestock Demo…" value="${r.activity||""}" onchange="schedRows[${i}].activity=this.value"/>
+      <input class="sched-input" placeholder="Show Barn" value="${r.location||""}" onchange="schedRows[${i}].location=this.value"/>
+      <button class="modal-close" onclick="schedRows.splice(${i},1);renderSchedRows()" ${schedRows.length===1?"disabled style='opacity:.3'":""}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>`;
+    container.appendChild(row);
+  });
+}
+window.saveSchedule = () => {
+  if(!schedTarget) return;
+  const rows = schedRows.filter(r=>r.time||r.activity);
+  saveSchedToDB(schedTarget.gid, schedTarget.cid, rows);
+  closeSchedModal();
+};
+
+// ── Print ─────────────────────────────────────────────────────
+window.doPrint = (gid,cid) => {
+  const g   = state.grades[gid]; const cls = g?.classes?.[cid];
+  if(!cls) return;
+  const names = Object.values(cls.students||{});
+  let inCount=0; names.forEach(n=>{if(state.checkins[checkinKey(cid,n)])inCount++;});
+  const schedHTML = (cls.schedule&&cls.schedule.length) ? `
+    <div style="margin-bottom:18px">
+      <div style="font-weight:700;font-size:11px;letter-spacing:2px;margin-bottom:6px;border-bottom:1px solid #ccc;padding-bottom:4px">CLASS SCHEDULE</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr style="background:#f0f0f0">
+          <th style="padding:5px 8px;text-align:left;width:80px;border-bottom:1px solid #ccc">TIME</th>
+          <th style="padding:5px 8px;text-align:left;border-bottom:1px solid #ccc">ACTIVITY</th>
+          <th style="padding:5px 8px;text-align:left;width:110px;border-bottom:1px solid #ccc">LOCATION</th>
+        </tr></thead>
+        <tbody>${cls.schedule.map((r,i)=>`<tr style="background:${i%2?"#f9f9f9":"#fff"}">
+          <td style="padding:5px 8px;border-bottom:1px solid #eee;font-weight:600">${r.time||""}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid #eee">${r.activity||""}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid #eee">${r.location||""}</td>
+        </tr>`).join("")}</tbody>
+      </table>
+    </div>` : "";
+  document.getElementById("print-root").innerHTML = `
+    <div style="border-bottom:3px solid #000;padding-bottom:10px;margin-bottom:14px">
+      <div style="font-size:10px;letter-spacing:2px;font-weight:700;margin-bottom:4px">SABINE FFA — ELEMENTARY FIELD DAY</div>
+      <div style="font-size:22px;font-weight:700">${GRADE_LABELS[gid]} — Room ${cls.room}</div>
+      <div style="font-size:13px">Teacher: ${cls.teacher}</div>
+      <div style="font-size:11px;color:#555;margin-top:3px">${names.length} students &bull; ${inCount} checked in</div>
+    </div>
+    ${schedHTML}
+    <div>
+      <div style="font-weight:700;font-size:11px;letter-spacing:2px;margin-bottom:6px;border-bottom:1px solid #ccc;padding-bottom:4px">STUDENT ROSTER</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr style="background:#f0f0f0">
+          <th style="padding:5px 8px;text-align:left;width:28px;border-bottom:1px solid #ccc">#</th>
+          <th style="padding:5px 8px;text-align:left;border-bottom:1px solid #ccc">NAME</th>
+          <th style="padding:5px 8px;text-align:center;width:60px;border-bottom:1px solid #ccc">IN</th>
+          <th style="padding:5px 8px;width:100px;border-bottom:1px solid #ccc;border-left:1px solid #ccc">NOTES</th>
+        </tr></thead>
+        <tbody>${names.map((n,i)=>`<tr style="background:${i%2?"#f9f9f9":"#fff"}">
+          <td style="padding:5px 8px;border-bottom:1px solid #eee;color:#888">${i+1}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid #eee;font-weight:500">${n}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:center">${state.checkins[checkinKey(cid,n)]?"✓":""}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid #eee;border-left:1px solid #ccc"></td>
+        </tr>`).join("")}</tbody>
+      </table>
+    </div>
+    <div style="margin-top:18px;padding-top:10px;border-top:1px solid #ddd;font-size:10px;color:#999">Sabine FFA Field Day</div>
+  `;
+  window.print();
+};
+</script>
+</body>
+</html>

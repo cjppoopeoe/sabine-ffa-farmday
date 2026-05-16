@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sabine FFA — Welcome Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,800;0,900;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #04060e;
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── PARTICLE BG ── */
+  canvas#particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+  /* ── NAV (small) ── */
+  nav {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .6rem 1.5rem;
+    border-bottom: 1px solid #ffffff0a;
+    background: #04060ecc;
+  }
+  .nav-brand { display: flex; align-items: center; gap: .6rem; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: .9rem; letter-spacing: .08em; }
+  .nav-star { color: #f5a623; }
+  .nav-links a { font-size: .7rem; font-weight: 600; letter-spacing: .06em; color: #4a6080; text-decoration: none; padding: .3rem .7rem; border-radius: 5px; border: 1px solid transparent; transition: all .2s; margin-left: .4rem; }
+  .nav-links a:hover { color: #dce6ff; border-color: #1a2640; }
+  .nav-links a.active { color: #f5a623; border-color: #f5a62344; background: #f5a62311; }
+
+  /* ── MAIN STAGE ── */
+  .stage {
+    flex: 1; position: relative; z-index: 5;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+
+  /* ── IDLE STATE ── */
+  .idle {
+    text-align: center;
+    animation: idlePulse 4s ease-in-out infinite;
+  }
+  @keyframes idlePulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+  .idle-star { font-size: 4rem; color: #f5a623; margin-bottom: 1rem; display: block; }
+  .idle-title { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(2rem,6vw,4rem); font-weight: 900; letter-spacing: .08em; color: #ffffff30; }
+  .idle-sub   { font-size: clamp(.75rem,2vw,1rem); color: #ffffff18; margin-top: .5rem; letter-spacing: .15em; }
+
+  /* ── WELCOME CARD ── */
+  .welcome-card {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 2rem;
+    opacity: 0; pointer-events: none;
+    transition: opacity .1s;
+  }
+  .welcome-card.visible { opacity: 1; }
+
+  .welcome-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(1rem, 3vw, 1.6rem);
+    font-weight: 700; letter-spacing: .25em;
+    color: #ffffff60; margin-bottom: 1.5rem;
+    animation: slideDown .6s cubic-bezier(.16,1,.3,1) both;
+  }
+  .welcome-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(3rem, 12vw, 9rem);
+    font-weight: 900; letter-spacing: .02em; line-height: .95;
+    background: linear-gradient(135deg, #fff 0%, var(--card-color, #f5a623) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: nameReveal .8s cubic-bezier(.16,1,.3,1) .1s both;
+  }
+  .welcome-sub {
+    font-size: clamp(.8rem, 2.5vw, 1.3rem); color: #ffffff60;
+    margin-top: 1.25rem; letter-spacing: .1em;
+    animation: slideUp .6s cubic-bezier(.16,1,.3,1) .3s both;
+  }
+  .welcome-teacher {
+    font-size: clamp(.7rem, 2vw, 1rem); color: #ffffff40;
+    margin-top: .5rem; letter-spacing: .08em;
+    animation: slideUp .6s cubic-bezier(.16,1,.3,1) .4s both;
+  }
+
+  @keyframes slideDown { from{transform:translateY(-30px);opacity:0} to{transform:translateY(0);opacity:1} }
+  @keyframes slideUp   { from{transform:translateY(30px);opacity:0}  to{transform:translateY(0);opacity:1} }
+  @keyframes nameReveal{ from{transform:scale(.85);opacity:0} to{transform:scale(1);opacity:1} }
+
+  /* ── BURST RINGS ── */
+  .burst-ring {
+    position: absolute; border-radius: 50%;
+    animation: burstRing 1.4s ease-out forwards;
+    pointer-events: none; z-index: 1;
+  }
+  @keyframes burstRing {
+    0%  { transform: scale(0); opacity: .7; }
+    100%{ transform: scale(6); opacity: 0; }
+  }
+
+  /* ── RECENT TICKER ── */
+  .ticker {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+    background: #04060ef0; border-top: 1px solid #ffffff0a;
+    padding: .55rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+    overflow: hidden;
+  }
+  .ticker-label { font-family: 'Barlow Condensed', sans-serif; font-size: .72rem; font-weight: 700; letter-spacing: .15em; color: #f5a623; white-space: nowrap; }
+  .ticker-track { display: flex; gap: 2rem; overflow: hidden; flex: 1; }
+  .ticker-item { font-size: .78rem; color: #8899bb; white-space: nowrap; flex-shrink: 0; }
+  .ticker-item span { color: #dce6ff; font-weight: 500; }
+
+  /* ── STATS STRIP ── */
+  .stats-strip {
+    position: fixed; top: 48px; right: 1.5rem; z-index: 20;
+    display: flex; flex-direction: column; gap: .4rem; align-items: flex-end;
+  }
+  .stat-pill {
+    background: #0c1220cc; border: 1px solid #1a2640;
+    border-radius: 20px; padding: .3rem .9rem;
+    font-family: 'Barlow Condensed', sans-serif; font-size: .85rem; font-weight: 700; letter-spacing: .06em;
+    backdrop-filter: blur(8px);
+  }
+
+  /* ── CONFETTI ── */
+  .confetti-piece {
+    position: fixed; pointer-events: none; z-index: 100;
+    width: 8px; height: 8px; border-radius: 2px;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0%  { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100%{ transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<nav>
+  <div class="nav-brand"><span class="nav-star">★</span> SABINE FFA FIELD DAY</div>
+  <div class="nav-links">
+    <a href="index.html">✓ Check-In</a>
+    <a href="welcome.html" class="active">◉ Welcome Board</a>
+    <a href="schedule.html">≡ Schedules</a>
+  </div>
+</nav>
+
+<!-- Stats strip -->
+<div class="stats-strip">
+  <div class="stat-pill" id="stripIn" style="color:#22c55e">0 / 0 checked in</div>
+  <div class="stat-pill" id="stripPct" style="color:#f5a623">0% complete</div>
+</div>
+
+<!-- Main stage -->
+<div class="stage">
+  <!-- Idle -->
+  <div class="idle" id="idleState">
+    <span class="idle-star">★</span>
+    <div class="idle-title">SABINE FFA</div>
+    <div class="idle-title">ELEMENTARY FIELD DAY</div>
+    <div class="idle-sub">WAITING FOR ARRIVALS</div>
+  </div>
+
+  <!-- Welcome card -->
+  <div class="welcome-card" id="welcomeCard">
+    <div class="welcome-label">WELCOME TO FIELD DAY</div>
+    <div class="welcome-name" id="welcomeName"></div>
+    <div class="welcome-sub" id="welcomeSub"></div>
+    <div class="welcome-teacher" id="welcomeTeacher"></div>
+  </div>
+</div>
+
+<!-- Recent ticker -->
+<div class="ticker">
+  <div class="ticker-label">RECENTLY CHECKED IN</div>
+  <div class="ticker-track" id="tickerTrack">
+    <div class="ticker-item" style="color:var(--muted)">No arrivals yet</div>
+  </div>
+</div>
+
+<script src="firebase-config.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const app = initializeApp(FIREBASE_CONFIG);
+const db  = getDatabase(app);
+
+// ── Particles background ───────────────────────────────────────
+const canvas = document.getElementById("particles");
+const ctx = canvas.getContext("2d");
+let W, H, pts = [];
+function resizeCanvas() { W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
+resizeCanvas(); window.addEventListener("resize", resizeCanvas);
+for(let i=0;i<60;i++) pts.push({x:Math.random()*2000,y:Math.random()*1200,vx:(Math.random()-.5)*.15,vy:(Math.random()-.5)*.15,r:Math.random()*1.5+.5,o:Math.random()*.4+.05});
+function drawParticles() {
+  ctx.clearRect(0,0,W,H);
+  pts.forEach(p=>{
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(77,159,255,${p.o})`; ctx.fill();
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+    if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+  });
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// ── Grade config ───────────────────────────────────────────────
+const GRADE_COLORS = { k:"#f5a623","1":"#22c55e","2":"#4d9fff","3":"#a855f7","4":"#ef4444","5":"#06b6d4" };
+const GRADE_LABELS = { k:"Kindergarten","1":"1st Grade","2":"2nd Grade","3":"3rd Grade","4":"4th Grade","5":"5th Grade" };
+const GRADE_ORDER  = ["k","1","2","3","4","5"];
+
+function checkinKey(cid,name) { return `${cid}_${name.replace(/[^a-z0-9]/gi,"_")}`; }
+
+// ── State ──────────────────────────────────────────────────────
+let grades={}, checkins={}, prevCheckins={};
+let recentlyCheckedIn = []; // [{grade,teacher,name,time}]
+let welcomeTimer = null;
+let idleTimer = null;
+
+onValue(ref(db,"grades"), snap => { grades = snap.val()||{}; });
+onValue(ref(db,"checkins"), snap => {
+  const next = snap.val()||{};
+  detectNewCheckins(next);
+  checkins = next;
+  updateStats();
+  updateTicker();
+});
+
+function detectNewCheckins(next) {
+  // Find keys that just turned truthy
+  const newOnes = [];
+  Object.keys(next).forEach(k=>{
+    if(next[k] && !prevCheckins[k]) newOnes.push(k);
+  });
+  prevCheckins = {...next};
+  if(newOnes.length===0) return;
+
+  // Resolve who they are
+  newOnes.forEach(key=>{
+    GRADE_ORDER.forEach(gid=>{
+      const g = grades[gid]; if(!g) return;
+      Object.entries(g.classes||{}).forEach(([cid,cls])=>{
+        Object.values(cls.students||{}).forEach(name=>{
+          if(checkinKey(cid,name)===key) {
+            recentlyCheckedIn.unshift({ gid, teacher:cls.teacher, name, time:new Date() });
+            if(recentlyCheckedIn.length>10) recentlyCheckedIn.pop();
+            showWelcome(gid, cls.teacher, cls.room, name);
+          }
+        });
+      });
+    });
+  });
+}
+
+// ── Welcome animation ─────────────────────────────────────────
+function showWelcome(gid, teacher, room, name) {
+  clearTimeout(welcomeTimer); clearTimeout(idleTimer);
+  const color = GRADE_COLORS[gid]||"#fff";
+  const grade  = GRADE_LABELS[gid]||"";
+
+  const card = document.getElementById("welcomeCard");
+  card.style.setProperty("--card-color", color);
+
+  // Force re-animation by cloning
+  const nameEl    = document.getElementById("welcomeName");
+  const subEl     = document.getElementById("welcomeSub");
+  const teachEl   = document.getElementById("welcomeTeacher");
+  const labelEl   = card.querySelector(".welcome-label");
+
+  nameEl.textContent  = name.includes(",") ? name.split(",").reverse().map(s=>s.trim()).join(" ") : name;
+  subEl.textContent   = `${grade} — Room ${room}`;
+  teachEl.textContent = `Welcome to Field Day!`;
+
+  // Restart animations
+  [card, nameEl, subEl, teachEl, labelEl].forEach(el=>{
+    el.style.animation="none"; el.offsetHeight; el.style.animation="";
+  });
+
+  document.getElementById("idleState").style.display="none";
+  card.classList.add("visible");
+
+  // Burst rings
+  spawnBurst(color);
+  spawnConfetti(color);
+
+  // Return to idle after 6 seconds
+  welcomeTimer = setTimeout(()=>{
+    card.classList.remove("visible");
+    idleTimer = setTimeout(()=>{
+      document.getElementById("idleState").style.display="block";
+    }, 600);
+  }, 6000);
+}
+
+function spawnBurst(color) {
+  const stage = document.querySelector(".stage");
+  for(let i=0;i<3;i++) {
+    const ring = document.createElement("div");
+    ring.className="burst-ring";
+    ring.style.cssText=`width:80px;height:80px;border:3px solid ${color};left:calc(50% - 40px);top:calc(50% - 40px);animation-delay:${i*.2}s`;
+    stage.appendChild(ring);
+    setTimeout(()=>ring.remove(), 1800);
+  }
+}
+
+function spawnConfetti(color) {
+  const colors = [color,"#fff","#f5a623","#22c55e","#4d9fff"];
+  for(let i=0;i<40;i++) {
+    const p=document.createElement("div");
+    p.className="confetti-piece";
+    p.style.cssText=`
+      left:${Math.random()*100}vw;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${1.5+Math.random()*2}s;
+      animation-delay:${Math.random()*.4}s;
+      border-radius:${Math.random()>.5?"50%":"2px"};
+    `;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),3500);
+  }
+}
+
+// ── Stats strip ───────────────────────────────────────────────
+function updateStats() {
+  let total=0, inCount=0;
+  GRADE_ORDER.forEach(gid=>{
+    const g=grades[gid]; if(!g) return;
+    Object.entries(g.classes||{}).forEach(([cid,cls])=>{
+      Object.values(cls.students||{}).forEach(name=>{
+        total++;
+        if(checkins[checkinKey(cid,name)]) inCount++;
+      });
+    });
+  });
+  const pct=total>0?Math.round(inCount/total*100):0;
+  document.getElementById("stripIn").textContent=`${inCount} / ${total} checked in`;
+  document.getElementById("stripPct").textContent=`${pct}% complete`;
+}
+
+// ── Ticker ────────────────────────────────────────────────────
+function updateTicker() {
+  const track = document.getElementById("tickerTrack");
+  if(recentlyCheckedIn.length===0) return;
+  track.innerHTML = recentlyCheckedIn.map(r=>{
+    const displayName = r.name.includes(",") ? r.name.split(",").reverse().map(s=>s.trim()).join(" ") : r.name;
+    const t = r.time;
+    const ts = `${t.getHours()%12||12}:${String(t.getMinutes()).padStart(2,"0")} ${t.getHours()>=12?"PM":"AM"}`;
+    return `<div class="ticker-item"><span>${displayName}</span> — ${GRADE_LABELS[r.gid]} &bull; ${r.teacher} &bull; ${ts}</div>`;
+  }).join("");
+}
+</script>
+</body>
+</html>
